@@ -15,7 +15,9 @@ EXAMPLE_SOURCE += $(wildcard src/*.c)
 FSP_SOURCE += $(TOP)/hw/mcu/renesas/fsp/ra/fsp/src/r_flash_hp/r_flash_hp.c $(TOP)/hw/mcu/renesas/fsp/ra/fsp/src/r_sci_i2c/r_sci_i2c.c
 CFLAGS += -DFLASH_HP_CFG_CODE_FLASH_PROGRAMMING_ENABLE -DFLASH_HP_CFG_DATA_FLASH_PROGRAMMING_ENABLE
 CFLAGS += -DUSB_PID=0x0368 -DBOARD_NAME=\"Portenta\ C33\"
-CFLAGS += -DLED_FADE_PWM_OUT_A=1 -DLED_FADE_PWM_OUT_B=0 -DLED_FADE_PWM_CHANNEL=6 -DLED_TIMER_SOURCE_DIV=1 -DUSE_HS_PORT_FOR_DFU
+CFLAGS += -DLED_FADE_PWM_OUT_A=1 -DLED_FADE_PWM_OUT_B=0 -DLED_FADE_PWM_CHANNEL=6 -DLED_TIMER_SOURCE_DIV=1
+CFLAGS += -DLED_FADE_GPIO=BSP_IO_PORT_04_PIN_00
+CFLAGS += -DUSE_HS_PORT_FOR_DFU
 CFLAGS += -DCODE_FLASH_DESCRIPTOR=\"@CodeFlash\ /0x00000000/8*8Ka,63*32Kg\"
 FSP_SOURCE += $(TOP)/hw/mcu/renesas/fsp/ra/fsp/src/r_gpt/r_gpt.c
 
@@ -29,3 +31,5 @@ LDFLAGS += -Wl,--gc-sections -flto
 CFLAGS += --warn-no-undef
 
 include $(TOP)/examples/rules.mk
+
+LD_FILE = $(FAMILY_PATH)/linker/gcc/$(MCU_VARIANT).ld

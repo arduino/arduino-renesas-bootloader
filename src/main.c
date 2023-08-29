@@ -458,9 +458,18 @@ const timer_cfg_t pwm_cfg = {
 };
 
 
-gpt_instance_ctrl_t pwm_ctrl;
+static gpt_instance_ctrl_t pwm_ctrl;
 #include "r_ioport.h"
-extern ioport_instance_ctrl_t g_ioport_ctrl;
+
+static const ioport_pin_cfg_t leds_pin_cfg[] = {
+    { .pin = LED_FADE_GPIO, .pin_cfg = IOPORT_CFG_PERIPHERAL_PIN | IOPORT_PERIPHERAL_GPT1 }
+};
+
+static const ioport_cfg_t pin_cfg = {
+    .number_of_pins = sizeof(leds_pin_cfg) / sizeof(ioport_pin_cfg_t),
+    .p_pin_cfg_data = leds_pin_cfg,
+};
+static ioport_instance_ctrl_t port_ctrl;
 
 int pwm_channel = LED_FADE_PWM_OUT_A ? GPT_IO_PIN_GTIOCA : GPT_IO_PIN_GTIOCB;
 
@@ -496,6 +505,8 @@ int main(void)
   }
 
 bootloader:
+
+  R_IOPORT_Open(&port_ctrl, &pin_cfg);
 
   R_GPT_Open(&pwm_ctrl, &pwm_cfg);
   R_GPT_PeriodSet(&pwm_ctrl, PERIOD);

@@ -16,6 +16,7 @@ FSP_SOURCE += $(TOP)/hw/mcu/renesas/fsp/ra/fsp/src/r_flash_lp/r_flash_lp.c
 CFLAGS += -DFLASH_LP_CFG_CODE_FLASH_PROGRAMMING_ENABLE -DFLASH_LP_CFG_DATA_FLASH_PROGRAMMING_ENABLE
 CFLAGS += -DUSB_PID=0x0369 -DBOARD_NAME=\"UNO\ R4\ WiFi\"
 CFLAGS += -DLED_FADE_PWM_OUT_A=0 -DLED_FADE_PWM_OUT_B=1 -DLED_FADE_PWM_CHANNEL=2 -DLED_TIMER_SOURCE_DIV=2
+CFLAGS += -DLED_FADE_GPIO=BSP_IO_PORT_01_PIN_02
 CFLAGS += -DCODE_FLASH_DESCRIPTOR=\"@CodeFlash\ /0x00000000/8*2Ka,120*2Kg\"
 CFLAGS += -DBOSSA_LOADER=1
 FSP_SOURCE += $(TOP)/hw/mcu/renesas/fsp/ra/fsp/src/r_gpt/r_gpt.c
@@ -33,3 +34,5 @@ CFLAGS += --warn-no-undef
 CFLAGS += -Wno-error=discarded-qualifiers -Wno-error=pointer-sign
 
 include $(TOP)/examples/rules.mk
+
+LD_FILE = $(FAMILY_PATH)/linker/gcc/$(MCU_VARIANT).ld
