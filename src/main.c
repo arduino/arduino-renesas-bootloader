@@ -91,7 +91,6 @@ void i2c_write(uint8_t address, uint8_t reg, uint8_t value) {
   R_SCI_I2C_Write(&p_api_ctrl, data, 2, false);
   R_BSP_SoftwareDelay(5, BSP_DELAY_UNITS_MILLISECONDS);
 }
-
 #endif
 
 #if BSP_FEATURE_FLASH_LP_VERSION
@@ -131,6 +130,26 @@ const flash_instance_t g_flash ={ .p_ctrl = &g_flash_ctrl, .p_cfg = &g_flash_cfg
 
 #if BOSSA_LOADER
 #include "r_sci_uart.h"
+
+void sci_uart_txi_isr(void);
+void sci_uart_tei_isr(void);
+void sci_uart_rxi_isr(void);
+void sci_uart_eri_isr(void);
+
+BSP_DONT_REMOVE const
+  fsp_vector_t g_vector_table[BSP_ICU_VECTOR_MAX_ENTRIES] BSP_PLACE_IN_SECTION(BSP_SECTION_APPLICATION_VECTORS) = {
+    [0] = sci_uart_txi_isr,
+    [1] = sci_uart_tei_isr,
+    [2] = sci_uart_rxi_isr,
+    [3] = sci_uart_eri_isr
+};
+
+const bsp_interrupt_event_t g_interrupt_event_link_select[BSP_ICU_VECTOR_MAX_ENTRIES] = {
+  [0] = BSP_PRV_IELS_ENUM(EVENT_SCI9_TXI),
+  [1] = BSP_PRV_IELS_ENUM(EVENT_SCI9_TEI),
+  [2] = BSP_PRV_IELS_ENUM(EVENT_SCI9_RXI),
+  [3] = BSP_PRV_IELS_ENUM(EVENT_SCI9_ERI)
+};
 
 sci_uart_instance_ctrl_t g_uart_ctrl;
 
@@ -190,7 +209,7 @@ transfer_info_t g_transfer21_info =
   .length = 0, };
 
 const dtc_extended_cfg_t g_transfer21_cfg_extend =
-{ .activation_source = 6, };
+{ .activation_source = 2, };
 const transfer_cfg_t g_transfer21_cfg =
 { .p_info = &g_transfer21_info, .p_extend = &g_transfer21_cfg_extend, };
 
@@ -214,10 +233,10 @@ const uart_cfg_t g_uart_cfg = {
   .txi_ipl = (2),
   .tei_ipl = (2),
   .eri_ipl = (2),
-  .txi_irq = 4,
-  .tei_irq = 5,
-  .rxi_irq = 6,
-  .eri_irq = 7,
+  .txi_irq = 0,
+  .tei_irq = 1,
+  .rxi_irq = 2,
+  .eri_irq = 3,
 };
 
 static const uint16_t crc16Table[256]=
@@ -461,13 +480,17 @@ const timer_cfg_t pwm_cfg = {
 static gpt_instance_ctrl_t pwm_ctrl;
 #include "r_ioport.h"
 
-static const ioport_pin_cfg_t leds_pin_cfg[] = {
-    { .pin = LED_FADE_GPIO, .pin_cfg = IOPORT_CFG_PERIPHERAL_PIN | IOPORT_PERIPHERAL_GPT1 }
+static const ioport_pin_cfg_t extra_pin_cfg[] = {
+#ifdef BOSSA_LOADER
+  { .pin = BSP_IO_PORT_01_PIN_09, .pin_cfg = (IOPORT_CFG_PERIPHERAL_PIN  | IOPORT_CFG_PULLUP_ENABLE | IOPORT_PERIPHERAL_SCI1_3_5_7_9) },
+  { .pin = BSP_IO_PORT_01_PIN_10, .pin_cfg = (IOPORT_CFG_PERIPHERAL_PIN  | IOPORT_CFG_PULLUP_ENABLE | IOPORT_PERIPHERAL_SCI1_3_5_7_9) },
+#endif
+  { .pin = LED_FADE_GPIO, .pin_cfg = IOPORT_CFG_PERIPHERAL_PIN | IOPORT_PERIPHERAL_GPT1 }
 };
 
 static const ioport_cfg_t pin_cfg = {
-    .number_of_pins = sizeof(leds_pin_cfg) / sizeof(ioport_pin_cfg_t),
-    .p_pin_cfg_data = leds_pin_cfg,
+    .number_of_pins = sizeof(extra_pin_cfg) / sizeof(ioport_pin_cfg_t),
+    .p_pin_cfg_data = extra_pin_cfg,
 };
 static ioport_instance_ctrl_t port_ctrl;
 
@@ -508,6 +531,19 @@ bootloader:
 
   R_IOPORT_Open(&port_ctrl, &pin_cfg);
 
+#ifdef BOSSA_LOADER
+  if (R_SYSTEM->VBTBKR[1] == 40) {
+    R_IOPORT_PinCfg(&port_ctrl, BSP_IO_PORT_04_PIN_08, IOPORT_CFG_PORT_DIRECTION_OUTPUT);
+    R_IOPORT_PinWrite(&port_ctrl, BSP_IO_PORT_04_PIN_08, BSP_IO_LEVEL_HIGH);
+    R_BSP_SoftwareDelay((uint32_t) 2, BSP_DELAY_UNITS_MILLISECONDS);
+    R_IOPORT_PinWrite(&port_ctrl, BSP_IO_PORT_04_PIN_08, BSP_IO_LEVEL_LOW);
+    R_IOPORT_PinCfg(&port_ctrl, BSP_IO_PORT_04_PIN_08, IOPORT_CFG_PORT_DIRECTION_INPUT);
+    R_SYSTEM->PRCR = (uint16_t) BSP_PRV_PRCR_PRC1_UNLOCK;
+    R_SYSTEM->VBTBKR[1] = 0;
+    R_SYSTEM->PRCR = (uint16_t) BSP_PRV_PRCR_LOCK;
+  }
+#endif
+
   R_GPT_Open(&pwm_ctrl, &pwm_cfg);
   R_GPT_PeriodSet(&pwm_ctrl, PERIOD);
   R_GPT_DutyCycleSet(&pwm_ctrl, 0, pwm_channel);
@@ -525,7 +561,7 @@ bootloader:
 #endif
 
 #if BOSSA_LOADER
-  R_SCI_UART_BaudCalculate(230400, true, 5, &uart_baud);
+  R_SCI_UART_BaudCalculate(230400, true, 5000, &uart_baud);
   R_SCI_UART_Open(&g_uart_ctrl, &g_uart_cfg);
   R_SCI_UART_BaudSet(&g_uart_ctrl, (void *) &uart_baud);
 #else
