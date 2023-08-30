@@ -1,25 +1,23 @@
 diff --git a/hw/bsp/ra/family.c b/hw/bsp/ra/family.c
-index 0aa58d86d..ff50d5363 100644
+index 0aa58d86d..7da569fc1 100644
 --- a/hw/bsp/ra/family.c
 +++ b/hw/bsp/ra/family.c
-@@ -60,7 +60,7 @@ static ioport_instance_ctrl_t port_ctrl;
+@@ -60,6 +60,7 @@ static ioport_instance_ctrl_t port_ctrl;
  // Vector Data
  //--------------------------------------------------------------------+
  
--BSP_DONT_REMOVE BSP_PLACE_IN_SECTION(BSP_SECTION_APPLICATION_VECTORS)
-+BSP_DONT_REMOVE BSP_PLACE_IN_SECTION(BSP_SECTION_APPLICATION_VECTORS) __WEAK
++#ifndef OVERRIDE_VECTOR_TABLE
+ BSP_DONT_REMOVE BSP_PLACE_IN_SECTION(BSP_SECTION_APPLICATION_VECTORS)
  const fsp_vector_t g_vector_table[BSP_ICU_VECTOR_MAX_ENTRIES] = {
      [0] = usbfs_interrupt_handler, /* USBFS INT (USBFS interrupt) */
-     [1] = usbfs_resume_handler,    /* USBFS RESUME (USBFS resume interrupt) */
-@@ -74,7 +74,7 @@ const fsp_vector_t g_vector_table[BSP_ICU_VECTOR_MAX_ENTRIES] = {
+@@ -86,6 +87,7 @@ const bsp_interrupt_event_t g_interrupt_event_link_select[BSP_ICU_VECTOR_MAX_ENT
+     [6] = BSP_PRV_IELS_ENUM(EVENT_USBHS_FIFO_1),         /* USBHS FIFO 1 (DMA transfer request 1) */
  #endif
  };
++#endif
  
--const bsp_interrupt_event_t g_interrupt_event_link_select[BSP_ICU_VECTOR_MAX_ENTRIES] = {
-+__WEAK const bsp_interrupt_event_t g_interrupt_event_link_select[BSP_ICU_VECTOR_MAX_ENTRIES] = {
-     [0] = BSP_PRV_IELS_ENUM(EVENT_USBFS_INT),            /* USBFS INT (USBFS interrupt) */
-     [1] = BSP_PRV_IELS_ENUM(EVENT_USBFS_RESUME),         /* USBFS RESUME (USBFS resume interrupt) */
-     [2] = BSP_PRV_IELS_ENUM(EVENT_USBFS_FIFO_0),         /* USBFS FIFO 0 (DMA transfer request 0) */
+ //--------------------------------------------------------------------+
+ // Board porting API
 diff --git a/src/portable/renesas/rusb2/dcd_rusb2.c b/src/portable/renesas/rusb2/dcd_rusb2.c
 index 3ec1b70b5..b216c37d5 100644
 --- a/src/portable/renesas/rusb2/dcd_rusb2.c
