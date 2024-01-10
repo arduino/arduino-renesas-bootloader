@@ -206,29 +206,29 @@ void bossa_task() {
 
       switch (command_buffer[0]) {
         case 'N':
-          R_SCI_UART_Write(&g_uart_ctrl, "\n\r", 2);
+          R_SCI_UART_Write(&g_uart_ctrl, (uint8_t *)"\n\r", 2);
           break;
 
         case 'V':
-          str = "Arduino Bootloader (SAM-BA extended) 2.0 [Arduino:IKXYZ]\n\r";
-          R_SCI_UART_Write(&g_uart_ctrl, str, strlen(str));
+          str = (char *)"Arduino Bootloader (SAM-BA extended) 2.0 [Arduino:IKXYZ]\n\r";
+          R_SCI_UART_Write(&g_uart_ctrl, (uint8_t *)str, strlen(str));
           break;
 
         case 'I':
-          str = "nRF52840-QIAA\n\r";
-          R_SCI_UART_Write(&g_uart_ctrl, str, strlen(str));
+          str = (char *)"nRF52840-QIAA\n\r";
+          R_SCI_UART_Write(&g_uart_ctrl, (uint8_t *)str, strlen(str));
           break;
 
         case 'X':
-          R_SCI_UART_Write(&g_uart_ctrl, "X\n\r", 3);
+          R_SCI_UART_Write(&g_uart_ctrl, (uint8_t *)"X\n\r", 3);
           break;
 
         case 'S': {
           uint32_t address = 0;
           uint32_t length = 0;
 
-          address = strtoul(&command_buffer[1], NULL, 16);
-          length = strtoul(&command_buffer[10], NULL, 16);
+          address = strtoul((const char*)&command_buffer[1], NULL, 16);
+          length = strtoul((const char*)&command_buffer[10], NULL, 16);
 
           rx_complete = false;
           R_SCI_UART_Read(&g_uart_ctrl, &data_buffer[address], length);
@@ -242,8 +242,8 @@ void bossa_task() {
           uint32_t arg1 = 0;
           uint32_t arg2 = 0;
 
-          arg1 = strtoul(&command_buffer[1], NULL, 16);
-          arg2 = strtoul(&command_buffer[10], NULL, 16);
+          arg1 = strtoul((const char*)&command_buffer[1], NULL, 16);
+          arg2 = strtoul((const char*)&command_buffer[10], NULL, 16);
 
           if (arg2 != 0) {
             __disable_irq();
@@ -256,7 +256,7 @@ void bossa_task() {
             copyOffset = arg1;
           }
 
-          R_SCI_UART_Write(&g_uart_ctrl, "Y\n\r", 3);
+          R_SCI_UART_Write(&g_uart_ctrl, (uint8_t *)"Y\n\r", 3);
 
           break;
         }
@@ -268,7 +268,7 @@ void bossa_task() {
             result[2] = '\r';
             result[3] = '\n';
             itoa(*ptr, result, 16);
-            R_SCI_UART_Write(&g_uart_ctrl, result, 4);
+            R_SCI_UART_Write(&g_uart_ctrl, (uint8_t *)result, 4);
             R_BSP_SoftwareDelay(5, BSP_DELAY_UNITS_MILLISECONDS);
           }
           break;
@@ -280,8 +280,8 @@ void bossa_task() {
           uint16_t crc = 0;
           uint8_t result[1 + 8 + 3 + 1];
 
-          address = strtoul(&command_buffer[1], NULL, 16);
-          size = strtoul(&command_buffer[10], NULL, 16);
+          address = strtoul((const char*)&command_buffer[1], NULL, 16);
+          size = strtoul((const char*)&command_buffer[10], NULL, 16);
 
           memcpy(flash_buffer, (void*)(SKETCH_FLASH_OFFSET + address), size);
 
@@ -289,9 +289,9 @@ void bossa_task() {
             crc = serial_add_crc(flash_buffer[i], crc);
           }
 
-          sprintf(result, "Z%08X#\n\r", crc);
+          sprintf((char*)result, "Z%08X#\n\r", crc);
 
-          R_SCI_UART_Write(&g_uart_ctrl, result, sizeof(result) - 1);
+          R_SCI_UART_Write(&g_uart_ctrl, (uint8_t *)result, sizeof(result) - 1);
 
           break;
         }

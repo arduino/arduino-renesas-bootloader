@@ -18,6 +18,10 @@ CFLAGS += -DUSB_PID=0x0171 -DBOARD_NAME=\"OPTA\ ANALOG\ V0.1\"
 CFLAGS += -DLED_FADE_PWM_OUT_A=1 -DLED_FADE_PWM_OUT_B=0 -DLED_FADE_PWM_CHANNEL=6 -DLED_TIMER_SOURCE_DIV=2
 CFLAGS += -DLED_FADE_GPIO=BSP_IO_PORT_04_PIN_11
 CFLAGS += -DCODE_FLASH_DESCRIPTOR=\"@CodeFlash\ /0x00000000/8*2Ka,120*2Kg\"
+CFLAGS += -DBOSSA_LOADER=1
+CFLAGS += -DBOSSA_TX_PIN=BSP_IO_PORT_03_PIN_02
+CFLAGS += -DBOSSA_RX_PIN=BSP_IO_PORT_03_PIN_01
+CFLAGS += -DBOSSA_PERIPHERAL_FLAGS=IOPORT_PERIPHERAL_SCI0_2_4_6_8
 FSP_SOURCE += $(TOP)/hw/mcu/renesas/fsp/ra/fsp/src/r_gpt/r_gpt.c
 
 SRC_C += $(addprefix $(CURRENT_PATH)/, $(EXAMPLE_SOURCE))
@@ -28,6 +32,8 @@ CFLAGS += -ffunction-sections -fdata-sections
 LDFLAGS += -Wl,--gc-sections -flto
 
 CFLAGS += --warn-no-undef
+# because compiled with BOSSA_LOADER some usb initializion are missing
+CFLAGS += -Wno-error=null-dereference
 
 include $(TOP)/examples/rules.mk
 
