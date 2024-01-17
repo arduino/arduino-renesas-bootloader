@@ -39,26 +39,6 @@ extern const flash_instance_t g_flash;
 
 #include "r_sci_uart.h"
 
-void sci_uart_txi_isr(void);
-void sci_uart_tei_isr(void);
-void sci_uart_rxi_isr(void);
-void sci_uart_eri_isr(void);
-
-BSP_DONT_REMOVE const
-  fsp_vector_t g_vector_table[BSP_ICU_VECTOR_MAX_ENTRIES] BSP_PLACE_IN_SECTION(BSP_SECTION_APPLICATION_VECTORS) = {
-    [0] = sci_uart_txi_isr,
-    [1] = sci_uart_tei_isr,
-    [2] = sci_uart_rxi_isr,
-    [3] = sci_uart_eri_isr
-};
-
-const bsp_interrupt_event_t g_interrupt_event_link_select[BSP_ICU_VECTOR_MAX_ENTRIES] = {
-  [0] = BSP_PRV_IELS_ENUM(EVENT_SCI9_TXI),
-  [1] = BSP_PRV_IELS_ENUM(EVENT_SCI9_TEI),
-  [2] = BSP_PRV_IELS_ENUM(EVENT_SCI9_RXI),
-  [3] = BSP_PRV_IELS_ENUM(EVENT_SCI9_ERI)
-};
-
 sci_uart_instance_ctrl_t g_uart_ctrl;
 
 baud_setting_t uart_baud = {
@@ -136,7 +116,17 @@ const uart_cfg_t g_uart_cfg = {
   .parity = UART_PARITY_OFF,
   .stop_bits = UART_STOP_BITS_1,
   .p_callback = user_uart_callback,
-
+#if defined BOSSA_LOADER 
+  #if defined DFU_LOADER
+  .rxi_ipl = (2),
+  .txi_ipl = (2),
+  .tei_ipl = (2),
+  .eri_ipl = (2),
+  .txi_irq = 7,
+  .tei_irq = 8,
+  .rxi_irq = 9,
+  .eri_irq = 10,
+  #else
   .rxi_ipl = (2),
   .txi_ipl = (2),
   .tei_ipl = (2),
@@ -145,6 +135,10 @@ const uart_cfg_t g_uart_cfg = {
   .tei_irq = 1,
   .rxi_irq = 2,
   .eri_irq = 3,
+  #endif
+#else
+
+  #endif
 };
 
 static const uint16_t crc16Table[256]=
@@ -324,6 +318,31 @@ void restore_usb_switch() {
 
 void led_blinking_task();
 
+#ifdef DFU_LOADER
+#include "bsp/board_api.h"
+#include "tusb.h"
+
+void run_bootloader() {
+  R_SYSTEM->PRCR = (uint16_t) BSP_PRV_PRCR_PRC1_UNLOCK;
+  R_SYSTEM->VBTBKR[1] = 0;
+  R_SYSTEM->PRCR = (uint16_t) BSP_PRV_PRCR_LOCK;
+  tud_init(BOARD_TUD_RHPORT);
+  if (board_init_after_tusb) {
+    board_init_after_tusb();
+  }
+  R_SCI_UART_BaudCalculate(230400, true, 5000, &uart_baud);
+  R_SCI_UART_Open(&g_uart_ctrl, &g_uart_cfg);
+  R_SCI_UART_BaudSet(&g_uart_ctrl, (void *) &uart_baud);
+
+  while (1) {
+    tud_task(); // tinyusb device task
+    bossa_task();
+    led_blinking_task();
+  }
+}
+
+#else
+
 void run_bootloader() {
   restore_usb_switch();
   R_SCI_UART_BaudCalculate(230400, true, 5000, &uart_baud);
@@ -335,5 +354,7 @@ void run_bootloader() {
     led_blinking_task();
   }
 }
+
+#endif
 
 #endif

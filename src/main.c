@@ -156,6 +156,9 @@ ioport_instance_ctrl_t port_ctrl;
 
 int pwm_channel = LED_FADE_PWM_OUT_A ? GPT_IO_PIN_GTIOCA : GPT_IO_PIN_GTIOCB;
 
+/* ***
+ * UNO R4 MINIMA AND C33 BOOTLOADER ** ONLY DFU **
+ * *** */
 __WEAK void run_bootloader() {
   // init device stack on configured roothub port
   tud_init(BOARD_TUD_RHPORT);
@@ -226,7 +229,18 @@ bootloader:
   return 0;
 }
 
-#ifndef BOSSA_LOADER
+
+#ifdef DFU_LOADER
+
+/* !!!
+*
+* UNO R4 MINIMA / C33 / OPTA ANALOG / OPTA DIGITAL ->  define this so that they have DFU callbacks
+*
+* UNO WIFI  does ** NOT ** define this so it avoids DFU callback
+*
+* !!! */
+  
+
 //--------------------------------------------------------------------+
 // Device callbacks
 //--------------------------------------------------------------------+
