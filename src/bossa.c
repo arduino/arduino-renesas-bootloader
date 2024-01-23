@@ -67,15 +67,32 @@ const sci_uart_extended_cfg_t   uart_cfg_extend = {
 volatile uint8_t command_buffer[64];
 volatile uint32_t command_buffer_index = 0;
 volatile bool rx_complete = false;
+volatile uint8_t tx_debug = 12;
+volatile bool rx_data = false;
+volatile uint32_t data_index = 0;
+volatile uint32_t data_received = 0;
+volatile uint32_t data_expected = 0;
+volatile uint8_t data_buffer[8192];
+uint8_t flash_buffer[4096];
+uint32_t copyOffset = 0;
 
 void user_uart_callback(uart_callback_args_t *p_args) {
   if(UART_EVENT_RX_CHAR == p_args->event) {
-    if (command_buffer_index < sizeof(command_buffer)) {
-      command_buffer[command_buffer_index++] = p_args->data;
+    if(rx_data) {
+      if(data_index < 8192) {
+        data_buffer[data_index++] = p_args->data;
+        data_received++;
+        if(data_received >= data_expected) {
+          rx_data = false;
+          rx_complete = true;
+        }
+      }
     }
-  }
-  if (UART_EVENT_RX_COMPLETE == p_args->event) {
-    rx_complete = true;
+    else {
+      if (command_buffer_index < sizeof(command_buffer)) {
+        command_buffer[command_buffer_index++] = p_args->data;
+      }
+    }
   }
 }
 
@@ -106,7 +123,7 @@ const transfer_instance_t g_transfer21 =
 { .p_ctrl = &g_transfer21_ctrl, .p_cfg = &g_transfer21_cfg, .p_api = &g_transfer_on_dtc };
 
 const uart_cfg_t g_uart_cfg = {
-  .channel                              = 9,
+  .channel                              = BOSSA_UART_CHANNEL,
   .p_context                            = NULL,
   .p_extend                             = &uart_cfg_extend,
   .p_transfer_tx                        = NULL,
@@ -136,7 +153,7 @@ const uart_cfg_t g_uart_cfg = {
   .rxi_irq = 2,
   .eri_irq = 3,
   #endif
-#else
+
 
   #endif
 };
@@ -182,14 +199,10 @@ unsigned short serial_add_crc(char ptr, unsigned short crc)
 	return (crc << 8) ^ crc16Table[((crc >> 8) ^ ptr) & 0xff];
 }
 
-uint8_t data_buffer[8192];
-uint8_t flash_buffer[4096];
-uint32_t copyOffset = 0;
-
 void pulse_led();
 
 void bossa_task() {
-
+  
   if (command_buffer_index > 0) {
 
     // printf("%c", b);
@@ -221,11 +234,12 @@ void bossa_task() {
           uint32_t address = 0;
           uint32_t length = 0;
 
-          address = strtoul((const char*)&command_buffer[1], NULL, 16);
-          length = strtoul((const char*)&command_buffer[10], NULL, 16);
-
+          data_received = 0;
+          rx_data = true;
+          data_index = strtoul((const char*)&command_buffer[1], NULL, 16);
+          data_expected = strtoul((const char*)&command_buffer[10], NULL, 16);
           rx_complete = false;
-          R_SCI_UART_Read(&g_uart_ctrl, &data_buffer[address], length);
+
           while (rx_complete == false) {
           }
 
@@ -291,6 +305,21 @@ void bossa_task() {
         }
 
         case 'K': {
+          #ifdef CLEAN_UP_BOSSA
+          R_SCI_UART_Close(&g_uart_ctrl);
+          #if defined DFU_LOADER
+            R_BSP_IrqDisable((IRQn_Type)7);
+            R_BSP_IrqDisable((IRQn_Type)8);
+            R_BSP_IrqDisable((IRQn_Type)9);
+            R_BSP_IrqDisable((IRQn_Type)10);
+          #else
+            R_BSP_IrqDisable((IRQn_Type)0);
+            R_BSP_IrqDisable((IRQn_Type)1);
+            R_BSP_IrqDisable((IRQn_Type)2);
+            R_BSP_IrqDisable((IRQn_Type)3);
+          #endif
+          #endif
+
           NVIC_SystemReset();
           break;
         }
@@ -330,7 +359,7 @@ void run_bootloader() {
   if (board_init_after_tusb) {
     board_init_after_tusb();
   }
-  R_SCI_UART_BaudCalculate(230400, true, 5000, &uart_baud);
+  R_SCI_UART_BaudCalculate(115200, true, 5000, &uart_baud);
   R_SCI_UART_Open(&g_uart_ctrl, &g_uart_cfg);
   R_SCI_UART_BaudSet(&g_uart_ctrl, (void *) &uart_baud);
 

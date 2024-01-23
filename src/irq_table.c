@@ -59,10 +59,10 @@
       [5] = BSP_PRV_IELS_ENUM(EVENT_USBHS_FIFO_0),         /* USBHS FIFO 0 (DMA transfer request 0) */
       [6] = BSP_PRV_IELS_ENUM(EVENT_USBHS_FIFO_1),         /* USBHS FIFO 1 (DMA transfer request 1) */
       #endif
-      [7] = BSP_PRV_IELS_ENUM(EVENT_SCI9_TXI),
-      [8] = BSP_PRV_IELS_ENUM(EVENT_SCI9_TEI),
-      [9] = BSP_PRV_IELS_ENUM(EVENT_SCI9_RXI),
-      [10] = BSP_PRV_IELS_ENUM(EVENT_SCI9_ERI), 
+      [7] = BSP_PRV_IELS_ENUM(EVENT_SCI2_TXI),
+      [8] = BSP_PRV_IELS_ENUM(EVENT_SCI2_TEI),
+      [9] = BSP_PRV_IELS_ENUM(EVENT_SCI2_RXI),
+      [10] = BSP_PRV_IELS_ENUM(EVENT_SCI2_ERI), 
     };
   
 
