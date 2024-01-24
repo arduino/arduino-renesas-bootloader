@@ -28,6 +28,17 @@
 #include <stdio.h>
 #include <string.h>
 
+
+/* This file is used by UNO R4 WIFI (only uses bossa as bootloader) and 
+   OPTA Expansions (both ANALOG and DIGITAL)
+   VERY IMPORTANT NOTE: 
+   - UNO R4 WIFI uses 203400 as baudrate
+   - Expansions use 115200 as baudrate 
+   The reason is that Opta controller (the programmer) does not correctly
+   open the UART at 203400.
+   THOSE VALUES are HARDCODED at the end of this file  */
+
+
 #if BOSSA_LOADER
 
 #include "bsp_api.h"
@@ -351,6 +362,10 @@ void led_blinking_task();
 #include "bsp/board_api.h"
 #include "tusb.h"
 
+/*
+ * OPTA Expansions
+ */
+
 void run_bootloader() {
   R_SYSTEM->PRCR = (uint16_t) BSP_PRV_PRCR_PRC1_UNLOCK;
   R_SYSTEM->VBTBKR[1] = 0;
@@ -371,6 +386,10 @@ void run_bootloader() {
 }
 
 #else
+
+/*
+ * UNO R4 WIFI
+ */
 
 void run_bootloader() {
   restore_usb_switch();
