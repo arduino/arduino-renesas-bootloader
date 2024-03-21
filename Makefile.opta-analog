@@ -1,5 +1,5 @@
 TOP ?= $(TINYUSB_ROOT)
-BOARD ?= opta_expansion
+BOARD ?= uno_r4
 
 # run 
 # python tools/get_deps.py ra

@@ -30,9 +30,9 @@ mv _build/portenta_c33/$PROJECT_NAME.hex distrib/dfu_c33.hex
 rm -rf _build
 
 make -f Makefile.opta-analog  -j8
-mv _build/opta_expansion/$PROJECT_NAME.hex distrib/opta-analog.hex
+mv _build/uno_r4/$PROJECT_NAME.hex distrib/opta-analog.hex
 rm -rf _build
 
 make -f Makefile.opta-digital  -j8
-mv _build/opta_expansion/$PROJECT_NAME.hex distrib/opta-digital.hex
+mv _build/uno_r4/$PROJECT_NAME.hex distrib/opta-digital.hex
 rm -rf _build
