@@ -1,5 +1,18 @@
+diff --git a/hw/bsp/ra/boards/portenta_c33/board.h b/hw/bsp/ra/boards/portenta_c33/board.h
+index 7841ec8b8..8442afe5e 100644
+--- a/hw/bsp/ra/boards/portenta_c33/board.h
++++ b/hw/bsp/ra/boards/portenta_c33/board.h
+@@ -32,7 +32,7 @@ extern "C" {
+ #endif
+ 
+ #define LED1                  BSP_IO_PORT_01_PIN_07 // Red LED
+-#define LED_STATE_ON          1
++#define LED_STATE_ON          0
+ 
+ #define SW1                   BSP_IO_PORT_04_PIN_08 // D12
+ #define BUTTON_STATE_ACTIVE   0
 diff --git a/hw/bsp/ra/family.c b/hw/bsp/ra/family.c
-index 0aa58d86d..7da569fc1 100644
+index 16332be17..07d6fd65d 100644
 --- a/hw/bsp/ra/family.c
 +++ b/hw/bsp/ra/family.c
 @@ -60,6 +60,7 @@ static ioport_instance_ctrl_t port_ctrl;
@@ -10,7 +23,7 @@ index 0aa58d86d..7da569fc1 100644
  BSP_DONT_REMOVE BSP_PLACE_IN_SECTION(BSP_SECTION_APPLICATION_VECTORS)
  const fsp_vector_t g_vector_table[BSP_ICU_VECTOR_MAX_ENTRIES] = {
      [0] = usbfs_interrupt_handler, /* USBFS INT (USBFS interrupt) */
-@@ -86,6 +87,7 @@ const bsp_interrupt_event_t g_interrupt_event_link_select[BSP_ICU_VECTOR_MAX_ENT
+@@ -89,6 +90,7 @@ const bsp_interrupt_event_t g_interrupt_event_link_select[BSP_ICU_VECTOR_MAX_ENT
      [6] = BSP_PRV_IELS_ENUM(EVENT_USBHS_FIFO_1),         /* USBHS FIFO 1 (DMA transfer request 1) */
  #endif
  };
@@ -19,10 +32,10 @@ index 0aa58d86d..7da569fc1 100644
  //--------------------------------------------------------------------+
  // Board porting API
 diff --git a/src/portable/renesas/rusb2/dcd_rusb2.c b/src/portable/renesas/rusb2/dcd_rusb2.c
-index 3ec1b70b5..b216c37d5 100644
+index 24edc30e7..e3edde467 100644
 --- a/src/portable/renesas/rusb2/dcd_rusb2.c
 +++ b/src/portable/renesas/rusb2/dcd_rusb2.c
-@@ -443,6 +443,7 @@ static void process_status_completion(uint8_t rhport)
+@@ -452,6 +452,7 @@ static void process_status_completion(uint8_t rhport)
  
  static bool process_pipe0_xfer(rusb2_reg_t* rusb, int buffer_type, uint8_t ep_addr, void* buffer, uint16_t total_bytes)
  {
