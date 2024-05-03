@@ -1,11 +1,11 @@
 TOP ?= $(TINYUSB_ROOT)
-BOARD ?= opta_expansion
+BOARD ?= uno_r4
 
 # run 
 # python tools/get_deps.py ra
 # once in the tinyusb root folder
 
-include $(TOP)/examples/make.mk
+include $(TOP)/examples/build_system/make/make.mk
 
 INC += \
 	src \
@@ -40,6 +40,6 @@ CFLAGS += --warn-no-undef
 # because compiled with BOSSA_LOADER some usb initializion are missing
 CFLAGS += -Wno-error=null-dereference
 
-include $(TOP)/examples/rules.mk
+include $(TOP)/examples/build_system/make/rules.mk
 
 LD_FILE = $(FAMILY_PATH)/linker/gcc/$(MCU_VARIANT).ld

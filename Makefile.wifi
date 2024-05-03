@@ -5,7 +5,7 @@ BOARD ?= uno_r4
 # python tools/get_deps.py ra
 # once in the tinyusb root folder
 
-include $(TOP)/examples/make.mk
+include $(TOP)/examples/build_system/make/make.mk
 
 INC += \
 	src \
@@ -38,6 +38,6 @@ LDFLAGS += -Wl,--gc-sections -flto
 CFLAGS += --warn-no-undef
 CFLAGS += -Wno-error=discarded-qualifiers -Wno-error=pointer-sign -Wno-error=null-dereference
 
-include $(TOP)/examples/rules.mk
+include $(TOP)/examples/build_system/make/rules.mk
 
 LD_FILE = $(FAMILY_PATH)/linker/gcc/$(MCU_VARIANT).ld
