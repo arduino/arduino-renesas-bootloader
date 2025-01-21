@@ -36,3 +36,8 @@ rm -rf _build
 make -f Makefile.opta-digital  -j8
 mv _build/uno_r4/$PROJECT_NAME.hex distrib/opta-digital.hex
 rm -rf _build
+
+make -f Makefile.nano  -j8
+mv _build/uno_r4/$PROJECT_NAME.hex distrib/dfu_nano.hex
+rm -rf _build
+
