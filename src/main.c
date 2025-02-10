@@ -282,31 +282,25 @@ void tud_resume_cb(void)
 // During this period, USB host won't try to communicate with us.
 uint32_t tud_dfu_get_timeout_cb(uint8_t alt, uint8_t state)
 {
-  if ( state == DFU_DNBUSY )
-  {
-    // For this example
-    // - Atl0 Flash is fast : 1   ms
-    // - Alt1 EEPROM is slow: 100 ms
-    return (alt == 0) ? 0 : 100;
-  }
-  else if (state == DFU_MANIFEST)
-  {
-    // since we don't buffer entire image and do any flashing in manifest stage
-    return 0;
-  }
-
+  (void) alt;
+  (void) state;
   return 0;
 }
 
+#ifndef ZEPHYR_SKETCH_FLASH_OFFSET
+#define ZEPHYR_SKETCH_FLASH_OFFSET SKETCH_FLASH_OFFSET
+#endif
+static uint32_t _offset;
+
 #if BSP_FEATURE_FLASH_HP_VERSION
 int flash_write_block() {
-  return R_FLASH_HP_Write(g_flash.p_ctrl, (uint32_t)aucbuffer, SKETCH_FLASH_OFFSET + ((auc_block_num * CFG_TUD_DFU_XFER_BUFSIZE)/sizeof(aucbuffer))*sizeof(aucbuffer) , auclen);
+  return R_FLASH_HP_Write(g_flash.p_ctrl, (uint32_t)aucbuffer, _offset + ((auc_block_num * CFG_TUD_DFU_XFER_BUFSIZE)/sizeof(aucbuffer))*sizeof(aucbuffer) , auclen);
 }
 #endif
 
 #if BSP_FEATURE_FLASH_LP_VERSION
 int flash_write_block() {
-  return R_FLASH_LP_Write(g_flash.p_ctrl, (uint32_t)aucbuffer, SKETCH_FLASH_OFFSET + ((auc_block_num * CFG_TUD_DFU_XFER_BUFSIZE)/sizeof(aucbuffer))*sizeof(aucbuffer) , PROGRAM_BLOCK_SIZE);
+  return R_FLASH_LP_Write(g_flash.p_ctrl, (uint32_t)aucbuffer, _offset + ((auc_block_num * CFG_TUD_DFU_XFER_BUFSIZE)/sizeof(aucbuffer))*sizeof(aucbuffer) , PROGRAM_BLOCK_SIZE);
 }
 #endif
 
@@ -315,19 +309,19 @@ int flash_write_block() {
 // Once finished flashing, application must call tud_dfu_finish_flashing()
 void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t const* data, uint16_t length)
 {
-  (void) alt;
+  _offset = alt == 0 ? SKETCH_FLASH_OFFSET : ZEPHYR_SKETCH_FLASH_OFFSET;
   auc_block_num = block_num;
 
-  //printf("\r\nReceived Alt %u BlockNum %u of length %u\r\n", alt, wBlockNum, length);
+  printf("\r\nReceived Alt %u BlockNum %u of length %u\r\n", alt, block_num, length);
 
-  if ((SKETCH_FLASH_OFFSET + (block_num * CFG_TUD_DFU_XFER_BUFSIZE)) % PROGRAM_BLOCK_SIZE == 0) {
+  if ((_offset + (block_num * CFG_TUD_DFU_XFER_BUFSIZE)) % PROGRAM_BLOCK_SIZE == 0) {
     // erase block
     __disable_irq();
 #if BSP_FEATURE_FLASH_HP_VERSION
-    int err = R_FLASH_HP_Erase(g_flash.p_ctrl, SKETCH_FLASH_OFFSET + (block_num * CFG_TUD_DFU_XFER_BUFSIZE), 1);
+    int err = R_FLASH_HP_Erase(g_flash.p_ctrl, _offset + (block_num * CFG_TUD_DFU_XFER_BUFSIZE), 1);
 #endif
 #if BSP_FEATURE_FLASH_LP_VERSION
-    int err = R_FLASH_LP_Erase(g_flash.p_ctrl, SKETCH_FLASH_OFFSET + (block_num * CFG_TUD_DFU_XFER_BUFSIZE), 1);
+    int err = R_FLASH_LP_Erase(g_flash.p_ctrl, _offset + (block_num * CFG_TUD_DFU_XFER_BUFSIZE), 1);
 #endif
     __enable_irq();
   }
@@ -377,10 +371,9 @@ void tud_dfu_manifest_cb(uint8_t alt)
 // Return the number of written bytes
 uint16_t tud_dfu_upload_cb(uint8_t alt, uint16_t block_num, uint8_t* data, uint16_t length)
 {
-  (void) block_num;
-  (void) alt;
+  _offset = alt == 0 ? SKETCH_FLASH_OFFSET : ZEPHYR_SKETCH_FLASH_OFFSET;
 
-  memcpy(data, (void*)(block_num * length), length);
+  memcpy(data, _offset + (void*)(block_num * length), length);
 
   return length;
 }
