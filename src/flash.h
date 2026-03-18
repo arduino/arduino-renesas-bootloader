@@ -16,6 +16,7 @@
    #define flash_apis g_flash_on_flash_hp
    #define PROGRAM_BLOCK_SIZE                (32 * 1024)
    #define SKETCH_FLASH_OFFSET               (64 * 1024)
+   #define ZEPHYR_SKETCH_FLASH_OFFSET        (1024 * 1024)
    #define TURN_OFF_CHARGER_LED
    void i2c_begin();
    void i2c_write(uint8_t address, uint8_t reg, uint8_t value);

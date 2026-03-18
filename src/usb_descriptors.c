@@ -73,7 +73,13 @@ uint8_t const * tud_descriptor_device_cb(void)
 //--------------------------------------------------------------------+
 
 // Number of Alternate Interface (each for 1 flash partition)
+#ifndef SKETCH_FLASH_DESCRIPTOR
+#define SKETCH_FLASH_DESCRIPTOR
 #define ALT_COUNT   2
+#else
+#define ALT_COUNT   3
+#endif
+
 
 enum
 {
@@ -130,6 +136,7 @@ char const* string_desc_arr [] =
   BOARD_NAME" DFU",             // 2: Product
   idString,                      // 3: Serials, should use chip ID
   CODE_FLASH_DESCRIPTOR,          // 4: DFU Partition 1
+  SKETCH_FLASH_DESCRIPTOR
   "@DataFlash /0x08000000/8*1Kg", // 5: DFU Partition 2
 };
 
