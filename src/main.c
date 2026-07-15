@@ -350,6 +350,7 @@ void tud_dfu_manifest_cb(uint8_t alt)
 
   __disable_irq();
   flash_write_block();
+  auclen = 0;
   __enable_irq();
 
   // flashing op for manifest is complete without error
@@ -358,12 +359,6 @@ void tud_dfu_manifest_cb(uint8_t alt)
 
   // Try booting the application
   // boot5(SKETCH_FLASH_OFFSET);
-#if BSP_FEATURE_FLASH_HP_VERSION
-    R_FLASH_HP_Close(g_flash.p_ctrl);
-#endif
-#if BSP_FEATURE_FLASH_LP_VERSION
-    R_FLASH_LP_Close(g_flash.p_ctrl);
-#endif
 }
 
 // Invoked when received DFU_UPLOAD request
@@ -388,6 +383,12 @@ void tud_dfu_abort_cb(uint8_t alt)
 // Invoked when a DFU_DETACH request is received
 void tud_dfu_detach_cb(void)
 {
+#if BSP_FEATURE_FLASH_HP_VERSION
+    R_FLASH_HP_Close(g_flash.p_ctrl);
+#endif
+#if BSP_FEATURE_FLASH_LP_VERSION
+    R_FLASH_LP_Close(g_flash.p_ctrl);
+#endif
   //printf("Host detach, we should probably reboot\r\n");
   uint32_t start_ms = board_millis();
   while (board_millis() - start_ms < 100) {
